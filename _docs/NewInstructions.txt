@@ -1,0 +1,104 @@
+8432 PET/CBM Emulator for CBM-II Computers
+==========================================
+Original program by N. Kuenne. Mods and instructions
+by Steve Gray - Apr 1/2024
+
+The "8432" Emulator is named because it can run on a CBM-II
+computer that typically has 2 or 4 BANKS of 64K RAM and
+each 64K BANK can be used to emulate one 8032 computer. So,
+8432. In reality, the limit is not 4 machines but is in fact
+determined by how many 64K BANKS of RAM that the computer
+has. CBM-II machines can have up to 15 BANKS of RAM.
+
+Currently, 8432 will run on a CBM-II B-series and emulate a
+standard 80-column 8032 machine. Due to the B-Series running
+at 2MHz, it can actually run PET programs faster than the
+original machine!
+
+
+Loading 8432
+------------
+
+To start 8432 insert the disk and press <SHIFT><RUN>. You
+will be asked which BANKS you wish to use for emulation.
+NOTE that B-series machines normally do not have a BANK 0.
+Enter the start and end BANK numbers.
+
+Next you are asked which Keyboard to use. You can select from
+the following:
+
+  "1"   - ANSI (North American)
+  "2"   - ?
+  "ALT" - ?
+  "D"   - DIN (German)
+
+Lastly, you will be asked if you want to use "40 column". This
+option re-programs the screen to a 40-column mode before entering
+emulation. When you enter emulation you must manually load the
+"40col" program that will re-configure the PET system to work in
+40 column mode and make the system appear to be a 4032 computer.
+NOTE: this is not perfect. It doesn't actually change the characters
+to be bigger, but simply changes the screen layout. Programs that
+write directly to the screen expecting 40 columns will now work
+properly, but this will cause problems with the Emulator menu, and
+all emulation screens will be 40 columns so you can't mix 40 and 80
+column emulation.
+
+Once you've selected your options the program will load code into
+selected BANK(s). This may take a while.
+
+
+Running 8432
+------------
+
+When the emulator starts up for the first time it will take you
+directly to the first BANK selected. You will see the following
+banner:
+
+     *** Commodore BASIC 4.0 ***  virtual machine 8432/x
+      31743 bytes free
+
+Where "x" is the bank#.
+
+If you selected YES to using 40 columns then you should immediately
+type:
+
+      DLOAD"40COL
+      RUN
+
+Now you can use the computer just like you are using an 8032 or 4032
+machine.
+
+
+Switching BANKS
+---------------
+
+At any time you can press <SHIFT><CBM> to access the 8432 Emulator menu
+where you can select a different BANK and run an entirely separate
+emulation. NOTE that only one instance is running at a time.
+
+You can also select "F" to enter the CBM-II Machine Language monitor.
+To return to the emulator you must enter "X" to exit back to BASIC
+then type:
+
+        BANK15:SYS1024
+
+
+Menu Features
+-----------------
+
+At the menu you can use the additional keys
+
+  #x - Reset (Cold Start) BANK x.
+  Wx - Enter MONITOR for BANK x.
+  Px - Toggle Parallel processing (multi-tasking) for BANK x.
+
+Advanced Emulation Features
+---------------------------
+
+While in emulation mode the following enhancements are available
+
+  <CBM>       - pause scrolling
+  <SHIFT><CE> - toggle screen mirroring/updating. When OFF the screen
+                is not updated which will speed up execution.
+

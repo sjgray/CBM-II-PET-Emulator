@@ -1,0 +1,81 @@
+8432 Emulator for CBM-II B-series - Enhanced by Steve J. Gray
+================================= - 2024-05-28
+
+8432 Emulator by N. Kuenne, found on CBUG disk.
+
+First mod by me, probably about 1987.
+
+- Add some introductory help text.
+- Add prompts for start and end banks
+- Add ability to show directory using "?" as input to keyboard prompt
+- Add prompt for 40-column mode.
+- Add DATA for CBM-II CRTC registers to switch screen to 40-column.
+- Add standard "80240.PRG" that switches 8032 to 40 column mode (mods the print routines too).
+- Add loop to load files to selected banks. Displays "Loading..." info.
+
+NOTE: Not all of these mods may be possible in the cartridge version.
+
+Files:
+
+NAME                BLKS  DESC
+----                ----  ----
+"8032EMU-PLUS40"....   6  CBM-II BASIC program/loader
+"8032.BANK F.0400"..   4  CBM-II Machine language. Loads to BANK 4 @ $0400-07FF
+"8032.CODE".........  81  PET ROMS. Loads to each bank at $B000: BASIC/EDITOR/EXT EDIT (proxa)/KERNAL
+"8032KB/xxx"........   2  PET support code for CBM-II Keyboards. Loads to $8800
+"8032.40 COL".......   4  PET "80240 ANYHZ" program to patch PET for 40-col. Added by me.
+
+
+File: 8032-EMU-PLUS40
+---------------------
+
+BASIC Program to load files and start emulator.
+
+SYS57952    $E260   - Setup CRTC controller.
+POKE55296/7 $D800/1 - CRTC Registers
+POKE1807,1  $070F   - ?
+POKE209,1   $00D1   - # of keys in buffer = 1
+POKE939,49  $03AB   - Put "1" into keyboard buffer [FIX for start BANK!!!]
+SYS1024     $0400   - Start Emulator
+
+
+File: 8032.BANK F.0400
+----------------------
+
+6509 binary loaded into BANK15's small RAM space.
+Starts up the emulator and controls switching between multiple virtual machines.
+
+File: 8032.CODE
+---------------
+
+PET and emulator code
+
+- $8800-8FFF - reserved for Keyboard support code, loaded separately
+- $9000-AFFF - reserved for option roms
+- $B000-DFFF - BASIC 4
+- $E000-E7FF - EDITOR ROM
+- $E800-E8FF - IO Area
+- $E900-EFFF - Emulator code
+- $F000-FFFF - KERNAL
+
+VICE Emulation Testing
+----------------------
+
+When testing in VICE autostart will not work if you boot into BASIC as it sets the
+Warmstart Flag at $03FA. POKE 1018,0 to reset flag for testing.
+
+TODO
+----
+
+* Needs to be analyzed to see what ROM code has been patched.
+* Investigate support for alternate Editor ROMS.
+* Investigate support for 4032 ROMS or 40-col routines.
+* Investigate programming the screen for 40/80 automatically per BANK.
+* See if can be run from cartridge (24K of ROM space in BANK 15).
+  - Create versions with ANSI and DIN keyboards.
+  - Add autostart. Boot to PET or over-ride to CBM-II mode.
+  - How many BANKS to use?
+* Idea: default load BANK1 only, which should be available for all systems.
+        Mod menu to detect RAM. Show "FREE" or "N/A". If user selects a
+        RAM bank that is FREE then prompt to load another instance.
+
