@@ -1,9 +1,18 @@
 PET Emulator Cartridge For CBM-II B-Series - Steve J. Gray  sjgray@rogers.com
 ==========================================   www.cbmsteve.ca
 
-STATUS: As of 2025-04-24 - First working binary.
-	Boots to menu. Emulator loaded to BANK1. Emulation works. CBM-II cursor not hidden.
-	This is in development. Not ready for release yet...
+STATUS: As of 2025-04-29 - Updated
+
+	* Displays Banks being loaded at top left.
+	* Boots to menu.
+	* Assembler options for Mode, Bank Range, and Keyboard
+        * Add keyboard Select (1-4) and additional keyboard BIN files.
+	* Add MAKE.BAT file.
+        * Rename some files.
+	* New binaries. Example binaries with 3 different modes for $2000 slot.
+          (The $4000 and $6000 binaries are common, only the LOADER routine differs)
+
+*** This is in development. Please test if you can and send feedback!
 
 
 Intro
@@ -61,9 +70,27 @@ The Cartridge will reside from $2000-$7FFF in BANK15 which is all 3 normal cartr
 Emulation code can be copied to any 64K RAM BANK, normally BANK1. As well, the Emulation
 menu is loaded into BANK15 at $0400-07FF, which is executed to run the emulator.
 
+There is a "Configuration Options" section where you can specify assembly options. Make sure these
+are updated before assembling!
+
+
+Assembling the Source
+---------------------
+
+You can assemble a BINary image to burn to ROM, or a PRG file that can be BLOADed.
+Make sure to select the right type. Put a ";" at the start of the line for the option
+you DO NOT want, and no ";" for the one you DO.
+
+To assemble type: MAKE
+
+When you chose a BIN file you will get a 24K binary. You may need to split it up into 3
+separate files for burning to EPROM. I recommend a program called "HxD" to help with this.
+
 
 Disk Version Files
 ------------------
+
+These are the files that were included with my enhanced emulator.
 
 NAME                BLKS  DESC
 ----                ----  ----
@@ -127,7 +154,7 @@ Cartridge:
 	This will AutoStart when the VICE is reset.
 
 Softloading:
-	Load file:   bload "v00",p8192
+	Load file:   bload "cbm2pet.prg",p8192
 	Do a "POKE 1018,0" to reset the Warmstart Flag at $03FA. 
 
 
@@ -136,7 +163,7 @@ History
 
 2024-05-28 - Project Start
 2025-04-24 - First working binary, tested using my CBM-II ROMCART. Autoload Emulator code to BANK "1". Start by pressing "1".
-
+2025-04-29 - Add configuration options, new keyboard files, added binaries
 
 TODO
 ----
@@ -145,9 +172,4 @@ TODO
 * Investigate support for alternate Editor ROMS.
 * Investigate support for 4032 ROMS or 40-col routines.
 * Investigate programming the screen for 40/80 automatically per BANK.
-* Idea: Requires modding Menu code.
-	Default load BANK1 only, which should be available for all systems.
-        Mod menu to detect RAM. Show "FREE" or "N/A". If user selects a
-        RAM bank that is FREE then prompt to load another instance.
-
-
+* Idea: Mod the BANK15 Menu code to allow loading available BANKS
