@@ -1,12 +1,13 @@
 PET Emulator Cartridge For CBM-II B-Series - Steve J. Gray  sjgray@rogers.com
 ==========================================   www.cbmsteve.ca
 
-STATUS: As of 2025-04-29 - Updated
+STATUS: As of 2025-05-05 - Updated
 
 	* Displays Banks being loaded at top left.
-	* Boots to menu.
-	* Assembler options for Mode, Bank Range, and Keyboard
-        * Add keyboard Select (1-4) and additional keyboard BIN files.
+	* Displays Banner (when Banner=1).
+	* Boots to menu (unless NoMenu=1).
+	* 4 Modes (NoLoad,BASIC Bank,Range,Smart)
+        * Keyboard Select (1-4) and additional keyboard BIN files.
 	* Add MAKE.BAT file.
         * Rename some files.
 	* New binaries. Example binaries with 3 different modes for $2000 slot.
@@ -164,6 +165,8 @@ History
 2024-05-28 - Project Start
 2025-04-24 - First working binary, tested using my CBM-II ROMCART. Autoload Emulator code to BANK "1". Start by pressing "1".
 2025-04-29 - Add configuration options, new keyboard files, added binaries
+2025-05-05 - All 4 Modes working now. (Tested in VICE)
+
 
 TODO
 ----

@@ -1,0 +1,419 @@
+
+; ******** Source: PET-EmuCart.asm
+     1                          ; --------------------------------------------------------
+     2                          ; Commodore PET Emulator Cartridge for CBM-II
+     3                          ; --------------------------------------------------------
+     4                          ; Conversion to cartridge by Steve J. Gray
+     5                          ; Started: 2024-04-05
+     6                          ; Updated: 2025-04-30
+     7                          ;
+     8                          ; Based on 8432 Emulator by N. Kuenne, from CBUG library.
+     9                          ; Parts of the emulator have been translated to English
+    10                          ; by Steve J. Gray circa 1987.
+    11                          
+    12                          ;---------------------------------------------------------
+    13                          ; Configuration Options
+    14                          ;---------------------------------------------------------
+    15                          
+    16                          Banner = 1	; 0=No, 1=Yes 	- Display Banner?
+    17                          NoMenu = 0	; 0=No, 1=Yes	- Exit without starting Emulator?
+    18                          
+    19                          Mode = 4	; 0=Load to NONE		(future option - do not use!!!)
+    20                          		; 1=Load to PROGRAM space 	(usually BANK 1)
+    21                          		; 2=Load to RANGE 		(specified below)
+    22                          		; 3=Load to ALL RAM BANKS
+    23                          		; 4=Load to EXPANSION (smart)	(If available, otherwise works like Mode 1)
+    24                          
+    25                          BankStart = 5	; Start BANK	- Which Bank RANGE to Load? 
+    26                          BankEnd   = 14	; End   BANK
+    27                          
+    28                          Keyboard  = 1   ; 1=Normal	- Keyboard translation matrix
+    29                          		; 2=?
+    30                          		; 3=DIN
+    31                          		; 4=Alternate
+    32                          
+    33                          
+    34                          ; --------------------------------------------------------
+    35                          ; Defines
+    36                          ; --------------------------------------------------------
+    37                          
+    38                          ExeReg = $00		; 6509 Register: BANK where code runs
+    39                          IndReg = $01    	; 6509 Register: BANK for data: LDA(ZP),Y and STA(ZP),Y
+    40                          
+    41                          SrcZP    = $64		; Pointer to Source
+    42                          DstZP    = $66		; Pointer to Destination
+    43                          
+    44                          SrcBank  = $02		; Source Bank (usually 15)
+    45                          SrcStart = $03		; Source Start Page
+    46                          SrcPages = $04		; Source Pages to copy
+    47                          DstBank  = $05		; Destination Bank (any free memory bank)
+    48                          DstStart = $06		; Destination Start Page
+    49                          RangeS   = $07		; Range Start
+    50                          RangeE   = $08		; Range End
+    51                          
+    52                          TopSBank = $41		; ( 65) Top System Memory (2/4 depending on BASIC ROM) ## Only valid if BASIC initialized ##
+    53                          BotMBank = $035A	; (858) Bottom of Memory  (normally 1 for B-series, ie: BASIC Program BANK)
+    54                          TopMBank = $0357        ; (855) Top ACTUAL memory bank; 2 to E depending on RAM installed
+    55                          
+    56                          ResetVect= $03F8	; Point to BASIC ROM
+    57                          WarmFlag = $03FA	; Set to $A5 at COLD boot
+    58                          
+    59                          SCREEN   = $D000  	; Screen RAM in BANK 15
+    60                          BASIC	 = $8000	; BASIC start/initialization
+    61                          PRINT    = $FFD2	; KERNAL Print character routine
+    62                          
+    63                          ; --------------------------------------------------------
+    64                          ; Output: "filename",format
+    65                          ; Format: CBM   = PRG file with load address - for BLOAD
+    66                          ;         PLAIN = BIN file with code only    - for ROM cart
+    67                          ; --------------------------------------------------------
+    68                          
+    69                          !TO "cbm2pet.bin",plain
+    70                          ;!TO "cbm2pet.prg",cbm
+    71                          
+    72                          ; --------------------------------------------------------
+    73                          ; Start of binary
+    74                          ; --------------------------------------------------------
+    75                          ; CBM-II carts are mapped to $2000-$7FFF, and usually start
+    76                          ; at $2000, $4000, or $6000.
+    77                          ; The emulator takes about 22K so we will need to use the
+    78                          ; entire Cartridge space.
+    79                          ; Our boot code starts at $2000 and can be a max of 8 pages!
+    80                          ; The emulator occupies $2400-$7FFF.
+    81                          
+    82                          *=$2000
+    83                          
+    84                          ; --------------------------------------------------------
+    85                          ; Auto-Start 
+    86                          ; --------------------------------------------------------
+    87                          ; This is the autostart header.
+    88                          
+    89  2000 4c2020             InitC:		JMP ColdStart	;Cold Start
+    90  2003 4c9620             InitW:		JMP WarmStart	;Warm Start
+    91                          
+    92  2006 43c2cd32                   	!BYTE $43, $C2, $CD, $32	; "CBM2" (2=$2000)
+    93                          
+    94                          ; --------------------------------------------------------
+    95                          ; Proposed Multi-slot manager extension.  I am planning on
+    96                          ; writing an autostart menu system that will go at $1000,
+    97                          ; which when started by the normal system autostart will
+    98                          ; search for autostart headers in the normal cartridge
+    99                          ; space and display a menu and allow for selection.
+   100                          ; This extension is simply a quoted description string that
+   101                          ; can be displayed in the menu for app identification.
+   102                          ;  --------------------------------------------------------
+   103                          
+   104  200a 22                 		!BYTE 34			; Quote to signify description string
+   105  200b 50455420454d554c...		!PET "pet emulator @$2000"	; App Description
+   106  201e 2200               		!BYTE 34,0			; End of description
+   107                          
+   108                          ; --------------------------------------------------------
+   109                          ; Cartridge Loader Code
+   110                          ; --------------------------------------------------------
+   111                          ; A normal system initialization is needed so that io chips
+   112                          ; and system memory are set up for proper operation such as
+   113                          ; keyboard input.
+   114                          
+   115                          ColdStart:
+   116  2020 78                  	sei
+   117  2021 d8                         cld
+   118  2022 20fbf9                     jsr $F9FB		; Restart routine
+   119  2025 a9f0                       lda #$F0
+   120  2027 8dc100                     sta $00C1		; PgmKeyBuf+1
+   121  202a 2004e0             	jsr $E004		; Initialize Screen
+   122  202d 2088fa                     jsr $FA88		; Find Top of RAM
+   123  2030 20a2fb                     jsr $FBA2		; Set Page 3 Vectors
+   124  2033 2004e0             	jsr $E004		; Initialize Screen
+   125                          
+   126                          ;	-- Set Reset vector to BASIC start @ $8000
+   127                          
+   128  2036 a900               	lda #<BASIC		; BASIC Start  LO
+   129  2038 8df803             	sta ResetVect		; Reset Vector LO
+   130  203b a980               	lda #>BASIC		; BASIC Start  HI
+   131  203d 8df903             	sta ResetVect+1		; Reset Vector HI
+   132                          
+   133                          ;	-- Set Flags for WarmStart/ColdStart
+   134                          
+   135  2040 a9a5               	lda #$A5		; Byte to indicate COLDSTART completed
+   136  2042 8dfa03                     sta WarmFlag		; WarmStart Flag
+   137  2045 a95a               	lda #$5A		; Byte to indicate WARMSTART valid
+   138  2047 8dfb03             	sta WarmFlag+1		; WarmStart Valid
+   139                          
+   140                          ;	-- Detect BASIC ROM 128/256 here since BASIC is not initialized yet
+   141                          
+   142  204a a202               	LDX #2			; Assume BASIC 128
+   143  204c ad0180             	LDA $8001		; Read BASIC ROM.  $8001 will contain $27 or $89
+   144  204f c927               	CMP #$27		; Is it?
+   145  2051 f002               	BEQ SetBAS		; Yes, skip ahead
+   146  2053 a204               	LDX #4			; No, must be BASIC 256
+   147  2055 8641               SetBAS	STX TopSBank		; Set Top System BANK
+   148                          
+   149                          	!IF Banner=1 {
+   150  2057 20ee20             		jsr PrintMsg	; Display banner
+   151                          	}
+   152                          
+   153                          ; --------------------------------------------------------
+   154                          ; Load Menu
+   155                          ; --------------------------------------------------------
+   156                          
+   157  205a a94d               	LDA #"M"		; M=Menu
+   158  205c 8d00d0             	STA SCREEN		; put on screen
+   159  205f a90f               	LDA #15			; Source and Destination is BANK 15
+   160  2061 8502               	STA SrcBank		; Set Source from Cartridge
+   161  2063 8505               	STA DstBank		; Set Destination to RAM
+   162  2065 209a20             	JSR CopyMenu
+   163                          
+   164                          ; --------------------------------------------------------
+   165                          ; Handle MODE options to copy Emulator 
+   166                          ; --------------------------------------------------------
+   167                          ; Mode 0 = do not load banks (manual load via menu - TODO!)
+   168                           
+   169                          	!IF Mode=0 {
+   170                          		JMP WarmStart
+   171                          	}
+   172                          
+   173                          ; --------------------------------------------------------
+   174                          ; Mode 1 = Load to BASIC program space (BANK 1)
+   175                          
+   176                          	!IF Mode=1 {
+   177                          		LDA BotMBank		; First RAM Bank (B-series=1, P=series=0)
+   178                          		STA DstBank		; Set destination BANK
+   179                          		ADC #48			; Convert to number
+   180                          		STA SCREEN+1		; Display it
+   181                          		JSR CopyPET		; Copy PET Code (Keyboard/BASIC/EDIT/KERNAL/Emulator)
+   182                          	}
+   183                          
+   184                          ; --------------------------------------------------------
+   185                          ; Mode 2 = Load RANGE (specified below)
+   186                          
+   187                          	!IF Mode=2 {
+   188                          		LDA #BankStart		; Start BANK
+   189                          		STA DstBank		; Write it for copy
+   190                          RangeLoop:
+   191                          		LDA DstBank		; Load for ADC
+   192                          		ADC #48			; Convert to number
+   193                          		STA SCREEN+1		; Display it
+   194                          		JSR CopyPET		; Copy PET Code (Keyboard/BASIC/EDIT/KERNAL/Emulator)		
+   195                          		LDA DstBank		; Load for compare
+   196                          		CMP #BankEnd		; Compare to End BANK
+   197                          		BEQ WarmStart		; Yes, we are done
+   198                          		INC DstBank		; Next BANK
+   199                          		BNE RangeLoop		; Loop back for more
+   200                          	}
+   201                          
+   202                          ; --------------------------------------------------------
+   203                          ; Mode 3 = Load ALL RAM BANKS
+   204                          
+   205                          	!IF Mode=3 {
+   206                          		LDA TopMBank		; Last RAM BANK
+   207                          		STA RangeE		; Set as Range End
+   208                          		LDA BotMBank		; First RAM BANK
+   209                          		STA DstBank		; Start at First BANK
+   210                          
+   211                          RLoop		LDA DstBank		; Get it so we can convert to number
+   212                          		ADC #48			; Convert to number
+   213                          		STA SCREEN+1		; Display it
+   214                          
+   215                          		JSR CopyPET		; Copy PET Code (Keyboard/BASIC/EDIT/KERNAL/Emulator)		
+   216                          		LDA DstBank		; Load for compare
+   217                          		CMP RangeE		; Compare to Range End BANK
+   218                          		BEQ WarmStart		; Yes, we are done
+   219                          		INC DstBank		; Next BANK
+   220                          		BNE RLoop		; Loop back for more
+   221                          	}
+   222                          
+   223                          
+   224                          ; --------------------------------------------------------
+   225                          ; Mode 4 = Smart Mode.
+   226                          ; If BASIC128 or BASIC256 with matching RAM use BANK1
+   227                          ; If BASIC128 with 256K RAM use BANKs 3 and above
+   228                          ; If Expansion RAM then fill all available BANKs.
+   229                          ;
+   230                          ; TopSBank $41   = Top SYSTEM memory bank: 2 or 4 depending on BASIC ROM (128K or 256K)
+   231                          ; TopMBank $0357 = Top ACTUAL memory bank; 2 to E depending on RAM installed
+   232                          ; BotMBank $035A = Bottom of Memory (normally 1 for B-series, ie: BASIC Program BANK)
+   233                          
+   234                          
+   235                          	!IF Mode=4 {
+   236  2068 ad5a03             		LDA BotMBank		; Assume no extra RAM. Get Bottom Bank (Usually 1)
+   237  206b 8507               		STA RangeS		; Set as Default start
+   238  206d 8508               		STA RangeE		; Set as Default end
+   239                          
+   240  206f ad5703             		LDA TopMBank		; See if any extra RAM. Get TOP Memory
+   241  2072 c541               		CMP TopSBank		; Compare it to TOP Sytem Memory
+   242  2074 f007               		BEQ DoRange		; Equal so no extra Memory
+   243                          
+   244  2076 8508               		STA RangeE		; Store Top Memory as End Range
+   245  2078 a641               		LDX TopSBank		; Not equal, so must be RAM above
+   246  207a e8                 		INX			; Use next free BANK
+   247  207b 8607               		STX RangeS		; Set as Start Range
+   248                          
+   249  207d a507               DoRange		LDA RangeS		; Get Start Range
+   250  207f 8505               		STA DstBank		; Set as Destination
+   251  2081 18                 		CLC			; Clear Carry
+   252                          
+   253  2082 a505               RRLoop		LDA DstBank		; Get it so we can convert to number
+   254  2084 6930               		ADC #48			; Convert to number
+   255  2086 8d01d0             		STA SCREEN+1		; Display it
+   256                          
+   257  2089 20a820             		JSR CopyPET		; Copy PET Code (Keyboard/BASIC/EDIT/KERNAL/Emulator)		
+   258  208c a505               		LDA DstBank		; Load for compare
+   259  208e c508               		CMP RangeE		; Compare to Range End BANK
+   260  2090 f004               		BEQ WarmStart		; Yes, we are done
+   261  2092 e605               		INC DstBank		; Next BANK
+   262  2094 d0ec               		BNE RRLoop		; Loop back for more
+   263                          	}
+   264                          
+   265                          
+   266                          ; --------------------------------------------------------
+   267                          ; Start The Emulator / WarmStart
+   268                          ; --------------------------------------------------------
+   269                          
+   270                          WarmStart:
+   271                          
+   272                          	!IF NoMenu=1 {
+   273                          		JMP (ResetVect)	; Start BASIC
+   274                          	} else {
+   275  2096 4c0004             		JMP $0400	; Start the Emulator!
+   276                          	}
+   277  2099 00                 	BRK
+   278                          
+   279                          ; --------------------------------------------------------
+   280                          ; Setup Menu Code $0400-07FF   (4 pages to BANK15)
+   281                          ; --------------------------------------------------------
+   282                          ; This is the core of the emulation. It is always copied.
+   283                          
+   284                          CopyMenu:
+   285  209a a924               	LDA #>MENUCODE		; Point to Menu code
+   286  209c 8503               	STA SrcStart		; Set Source Page
+   287  209e a904               	LDA #4			; This is low-mem RAM and number of pages to copy
+   288  20a0 8506               	STA DstStart		; Set Destination $0400
+   289  20a2 8504               	STA SrcPages		; Set 4 pages to copy
+   290  20a4 20c720             	JSR CopyBlock		; Copy It!
+   291  20a7 60                 	RTS
+   292                          
+   293                          ; --------------------------------------------------------
+   294                          ; Setup PET Code  (88 pages to specified BANK)
+   295                          ; --------------------------------------------------------
+   296                          ; Sets up Keyboard, BASIC, EDIT, KERNAL, and Emulator code in specified BANK
+   297                          
+   298                          CopyPET:
+   299  20a8 a928               	LDA #>KEYCODE		; Point to Keyboard code ($8800-8FFF)
+   300  20aa 8503               	STA SrcStart		; Set Source Page
+   301  20ac a988               	LDA #$88		; 88 pages to copy
+   302  20ae 8506               	STA DstStart		; Destination = $8800
+   303  20b0 a908               	LDA #8
+   304  20b2 8504               	STA SrcPages		; Copy 8 pages
+   305  20b4 20c720             	JSR CopyBlock		; Copy it!
+   306                          
+   307  20b7 a930               	LDA #>PETCODE		; Setup for PET code ($B000-FFFF)
+   308  20b9 8503               	STA SrcStart		; Set Source Page
+   309  20bb a9b0               	LDA #$B0		; Set Destination Page
+   310  20bd 8506               	STA DstStart		; Destination = $B000
+   311  20bf a950               	LDA #80			; B to F = 5*16
+   312  20c1 8504               	STA SrcPages		; Copy 80 pages
+   313  20c3 20c720             	JSR CopyBlock		; Copy it!
+   314  20c6 60                 	RTS
+   315                          
+   316                          ; --------------------------------------------------------
+   317                          ; Copy a block of Memory from Source to Destination
+   318                          ; --------------------------------------------------------
+   319                          ; INPUT: SrcStart, DstStart, and SrcPages.
+   320                          ; USES : SrcZP, DstZP as pointers
+   321                          ; Copies entire Pages. Data must be aligned to PAGE Boundary!
+   322                          ; Only SrcPages is modified.
+   323                          
+   324                          CopyBlock:
+   325  20c7 a503               	LDA SrcStart		; Source Start Page
+   326  20c9 8565               	STA SrcZP+1		; Setup Source Pointer
+   327  20cb a506               	LDA DstStart		; Destination Start Page
+   328  20cd 8567               	STA DstZP+1		; Setup Destination Pointer
+   329                          
+   330  20cf a900               	LDA #0
+   331  20d1 8564               	STA SrcZP		; Set Source LO byte
+   332  20d3 8566               	STA DstZP		; Set Destination LO byte
+   333  20d5 a8                 	TAY			; Zero the index counter
+   334                                 
+   335                          CopyLoop:
+   336  20d6 a602               	LDX SrcBank		; Source BANK
+   337  20d8 8601               	STX IndReg		; Set 6509 Indirection Register
+   338  20da b164               	LDA (SrcZP),Y		; Read it
+   339  20dc a605               	LDX DstBank		; Destination BANK
+   340  20de 8601               	STX IndReg		; Set 6509 Indirection Register
+   341  20e0 9166               	STA (DstZP),Y		; Write it	
+   342  20e2 c8                 	INY			; Next byte in page
+   343  20e3 d0f1               	BNE CopyLoop		; Not 0 so loop back
+   344  20e5 e665               	INC SrcZP+1		; Next Source Page
+   345  20e7 e667               	INC DstZP+1		; Next Destination Page
+   346  20e9 c604               	DEC SrcPages		; Are we done?
+   347  20eb d0e9               	BNE CopyLoop		; No, loop back
+   348  20ed 60                 	RTS
+   349                          
+   350                          
+   351                          ; --------------------------------------------------------
+   352                          ; Print Banner Message
+   353                          ; --------------------------------------------------------
+   354                          
+   355                          !IF Banner=1 {
+   356                          
+   357                          PrintMsg
+   358  20ee a000               	LDY #0
+   359                          
+   360  20f0 b90421             BLoop	LDA BMsg,Y
+   361  20f3 f006               	BEQ BExit
+   362  20f5 20d2ff             	JSR PRINT
+   363  20f8 c8                 	INY
+   364  20f9 d0f5               	BNE BLoop
+   365  20fb 60                 BExit   RTS
+   366                          }
+   367                          
+   368  20fc 0000000000000000   	!BYTE 0,0,0,0,0,0,0,0
+   369                          
+   370  2104 0d0d               BMsg	!BYTE 13,13
+   371  2106 50455420454d554c...	!PET "pet emulator for cbm-ii.",13
+   372  211f 4f524947494e414c...	!PET "original 8432 emulator by n kuenne.",13
+   373  2143 4144415054454420...	!PET "adapted to cartridge by steve j. gray 20250505.",13,13
+   374                          
+   375                          	!IF NoMenu=1 { !PET "sys1024 to start",13 }
+   376                          
+   377  2174 00                 	!BYTE 0
+   378                          
+   379                          ; ========================================================
+   380                          ; Emulator Files/Code
+   381                          ; ========================================================
+   382                          ; We have 24K total cartridge ROM $2000-7FFF (96 pages)
+   383                          ; $2000 - The Loader code above here (Max 4 pages)
+   384                          ; $2400 - Emulator code ( 4 pages) to Bank 15
+   385                          ; $2800 - Keyboard code ( 8 pages) to any RAM Bank
+   386                          ; $3000 - PET+Em   code (80 pages) to any RAM Bank
+   387                          
+   388                          ; --------------------------------------------------------
+   389                          ; File: "8032.BANK F.0400"
+   390                          ; Load address removed. Loads to BANK15: $0400-07FF
+   391                          ; CBM-II code for menu.
+   392                          ; --------------------------------------------------------
+   393                          
+   394                          *=$2400
+   395                          MENUCODE:
+   396  2400 4c2b064c17064c36...		!BIN "cbm2.f0400.bin"		
+   397                          
+   398                          ; --------------------------------------------------------
+   399                          ; File: "8032kb*"
+   400                          ; Load address removed. Loads to BANK 1-14 at $8800-$8FFF
+   401                          ; --------------------------------------------------------
+   402                          
+   403                          *=$2800
+   404                          KEYCODE:
+   405  2800 e01b09000000e131...		!IF Keyboard=1 { !BIN "8032kb1.bin" }
+   406                          		!IF Keyboard=2 { !BIN "8032kb2.bin" }
+   407                          		!IF Keyboard=3 { !BIN "8032kbd.bin" }
+   408                          		!IF Keyboard=4 { !BIN "8032kbalt.bin" }
+   409                          
+   410                          ; --------------------------------------------------------
+   411                          ; File: "8032code"
+   412                          ; Load address removed. Loads to BANK 1-14 at $B000-$FFFF
+   413                          ; --------------------------------------------------------
+   414                          
+   415                          *=$3000
+   416                          PETCODE:
+   417  3000 c7b7ddb618bd82b8...		!BIN "8032code.bin"

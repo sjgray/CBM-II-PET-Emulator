@@ -3,7 +3,7 @@
 ; --------------------------------------------------------
 ; Conversion to cartridge by Steve J. Gray
 ; Started: 2024-04-05
-; Updated: 2025-04-30
+; Updated: 2025-05-05
 ;
 ; Based on 8432 Emulator by N. Kuenne, from CBUG library.
 ; Parts of the emulator have been translated to English
@@ -14,9 +14,9 @@
 ;---------------------------------------------------------
 
 Banner = 1	; 0=No, 1=Yes 	- Display Banner?
-NoMenu = 1	; 0=No, 1=Yes	- Exit without starting Emulator?
+NoMenu = 0	; 0=No, 1=Yes	- Exit without starting Emulator?
 
-Mode = 3	; 0=Load to NONE		(future option - do not use!!!)
+Mode = 4	; 0=Load to NONE		(future option - do not use!!!)
 		; 1=Load to PROGRAM space 	(usually BANK 1)
 		; 2=Load to RANGE 		(specified below)
 		; 3=Load to ALL RAM BANKS
@@ -233,16 +233,18 @@ RLoop		LDA DstBank		; Get it so we can convert to number
 
 
 	!IF Mode=4 {
-		LDA BotMBank		; Bottom Bank (Usually 1)
-		STA RangeS		; Default start
-		STA RangeE		; Default end
-		LDA TopSBank		; Get TOP BASIC
-		CMP TopMBank		; Get TOP Memory
+		LDA BotMBank		; Assume no extra RAM. Get Bottom Bank (Usually 1)
+		STA RangeS		; Set as Default start
+		STA RangeE		; Set as Default end
+
+		LDA TopMBank		; See if any extra RAM. Get TOP Memory
+		CMP TopSBank		; Compare it to TOP Sytem Memory
 		BEQ DoRange		; Equal so no extra Memory
 
+		STA RangeE		; Store Top Memory as End Range
 		LDX TopSBank		; Not equal, so must be RAM above
 		INX			; Use next free BANK
-		STX RangeS		; Set as End Range
+		STX RangeS		; Set as Start Range
 
 DoRange		LDA RangeS		; Get Start Range
 		STA DstBank		; Set as Destination
@@ -368,7 +370,7 @@ BExit   RTS
 BMsg	!BYTE 13,13
 	!PET "pet emulator for cbm-ii.",13
 	!PET "original 8432 emulator by n kuenne.",13
-	!PET "adapted to cartridge by steve j. gray 20250430.",13,13
+	!PET "adapted to cartridge by steve j. gray 20250505.",13,13
 
 	!IF NoMenu=1 { !PET "sys1024 to start",13 }
 
