@@ -1,0 +1,282 @@
+[PROJECT]
+UPDATED=2025-05-08, 5:14:19 PM
+LA=0400
+DIVLEN=80
+INLCOL=50
+[ENTRYPT]
+[SYMBOLS]
+0000,EXEREG,ExecReg
+0001,INDREG,IndReg
+0002,USRJUMP,USR Jump
+0005,TIMEH,Hour
+0006,TIMEM,Minute
+0007,TIMES,Seconds
+0008,TIMET,Tenths
+0009,USINGPTR,Print-Using Format Pointer
+000C,SEARCH,Search Character
+000D,QUOTEFLG,Quote Flag
+000F,CATCOUNT,Catalog command line count
+0010,DEFDIM,Default DIM flag
+0011,VARTYPE,Variable type
+0012,NUMTYPE,Numeric type
+0013,CRUNCHFLG,Crunch flag
+0014,SUBSCR,Subscript Index
+0015,INPUTTYP,Input type
+0016,DSWORK,Disk Status work area
+001A,PROMPT,Prompt suppress
+001B,INTVAL,Integer value
+001D,DESCSP,Descriptor Stack Pointer
+0020,MISCWRK,Misc work pointer
+002D,BASEND,End of BASIC pointer
+002D,BASSTART,Start of BASIC pointer
+0031,VARSTART,Start of Variables pointer
+0033,VAREND,End of Variables pointer
+0035 ARRYSTART,Start of Arrays pointer
+0037,ARRYEND,End of Arrays pointer
+0039,VARWORK,Variable work pointer
+003B,STRBOT,Bottom of Strings pointer
+003D,UTILSTR,Utility String pointer
+003F,STRTOP,Top of Strings pointer (long)
+0042,CURLN,Current line number
+0044,OLDLN,Old line number
+0046,OLDTXT,Old textpointer
+0049,DATALN,DATA line number
+004B,DATATXT,DATA text pointer
+004D,INPUTPTR,Input pointer
+004F,VARNAME,Variable Name
+0051,VARADDR,Variable Address (long)
+0054,FORLOOP,FOR loop pointer (long)
+0057,TXTSAVE,Text pointer save
+005A,CSACC,Comparison Symbol Accumulator
+005B,FNLOC,Function location
+005E,WSVEC,Working string vector
+0061,FNJUMP,Function Jump code
+0064,TMP0064,Work pointers
+006F,EXPON,Exponent sign
+0070,ACCPRE,Accumulator string prefix
+0073,ZP_73,Pointer $73
+0074,ZP_74,Pointer $74
+007A,ZP_7A,Zero Page $7A
+007B,ZP_7B,Zero Page $7B
+007F,ZP_7F,Zero Page $7F
+0080,ZP_80,Zero Page $80
+0090,FILENAMELO,FileNameAdrLo
+0091,FILENAMEHI,FileNameAdrHi
+0092,FILENAMESEG,FileNameAdrSeg
+0093,SAVEADLO,SaveAdrLow
+0094,SAVEADHI,SaveAdrHi
+0095,SAVEADSEG,SaveAdrSeg
+0096,ENDADLO,EndAdrLow
+0097,ENDADHI,EndAdrHi
+0098,ENDADSEG,EndAdrSeg
+0099,STARTADLO,StartAdrLow
+009A,STARTADHI,StartAdrHi
+009B,STARTADSEG,StartAdrSeg
+009C,STATUS,Status
+009D,FNLEN,FileNameLen
+009E,LOGICAD,LogicalAdr
+009F,FIRSTAD,FirstAdr
+00A0,SECONDAD,SecondAdr
+00A1,DEFINPDEV,DefInpDev
+00A2,DEFOUTDEV,DefOutDev
+00A3,TAPEBUFPTR,TapeBufPtr
+00A5,TAPEBUFSEG,TapeBufPtrSeg
+00A6,SERBUFPTR,RS-232 Serial Buffer pointer
+00A8,SERBUFSEG,RS-232 Serial Buffer Segment
+00A9,STOPFLAG,StopKeyFlag
+00AA,CTTEMP,CTemp
+00AB,SNSW1,snsw1
+00AC,SEGCHGPRT,SegChgPtr
+00AE,PCHISAV,PC HI Save
+00AF,PCLOSAV,PC LO Save
+00B0,SRSAV, SR Save
+00B1,ACSAV, AC Save
+00B2,XRSAV, XR Save
+00B3,YRSAV, YR Save
+00B4,SPSAV, SP Save
+00B5,INDSEGSAV, Ind Segment Save
+00B7,IRQHISAV, IRQ HI Save
+00B8,IRQLOSAV, IRQ LO Save
+00B9,ADR1, Adr1
+00BB,ADR2, Adr2
+00BD,MONCNTR, Monitor Counter
+00BE,MONTEMP, Monitor Temp
+00BF,MONDEVICE, Monitor Device Number
+00C0,PGMKEYBUF, Programmable Key Buffer
+00C2,PGMKEYPTR, Programmable Key Pointer
+00C4,SEDSAL,sedsal
+00C6,SEDEAL,sedeal
+00C8,CHRPTR,CharPtr
+00CA,CRSRLN,CursLine
+00CB,CRSRCOL,CursCol
+00CC,GRAGMD,GrafMode
+00CD,LASTIDX,LastIndex
+00CE,LASTLN,LastLine
+00CF,LASTCOL,LastCol
+00D0,NEWCHR,New character flag
+00D1,KEYBUFIDX,KeyBufIndex
+00D2,QUOTEMD,QuoteSw
+00D3,INSMODE,Insrt
+00D4,CONFIG,Config
+00D5,LASTLINE,LastLinePos
+00D6,KEYINDX,KeyIndex
+00D7,RPTCOUNT,RepeatCount
+00D8,RPTDELAY,RepeatDelay
+00D9,SEDT1,Temp
+00DA,SEDT2,Temp-frequently used
+00DB,PRTDATA,PrtData
+00DC,SCRTOP,ScreenTop
+00DD,SCRBOT,ScreenBot
+00DE,SCRLEFT,ScreenLeft
+00DF,SCRRIGHT,ScreenRight
+00E0,KBMOD,ModKey
+00E1,KBNORM,NorKey
+00E2,TABTBL,TAB Bitmap Table
+0200,FILENAM,Filename area
+0210,DOSCMDWRK,Disk command work area
+0255,MISC0255,Misc work area
+0257,BANKVAL,BANK value
+0258,CMDLF,Output logical file CMD
+0280,ERRLINK,Error routine link (854D)
+0282,WARMLINK,Warmstart link (85C5)
+0284,CRUNCH,Crunch Token link (88A9)
+0286,LISTLINK,List link (89DB)
+0288,CMDDISP,Command dispatch link (874C)
+028A,TOKENEVAL,Token evaluate link (969C)
+028C,EVALLNK,Expression eval link (95AF)
+028E,CHRGOT,CHRGOT link (B98E)
+0290,CHRGET,CHRGET vector (B994)
+0292,FL2VXVEC,Float-fixed vector (B980)
+0294,FX2FLVEC,Fixed-float vector (9CA5)
+0296,ERRVEC,Error trap vector
+0298,ERRLIN,Error line number
+029A,ERREXIT,Error exit pointer
+029C,STACKPTR,Stack pointer save
+02A6,BANKOFF,BANK offset
+0300,IRQVEC_LO,IRQ vector LO (FBE9)
+0301,IRQVEC_HI,IRQ vector HI (FBE9)
+0302,BRKVEC,BRK vector (EE21)
+0304,NMIVEC,NMI vector (FCAA)
+0306,OPENVEC,Open vector (F6BF)
+0308,CLOSEVEC,Close vector (F5ED)
+030A,CONINVEC,Connect-input vector (F549)
+030C,CONOUTVEC,Connect-output vector (F5A3)
+030E,RESTORVEC,Restore default IO vector (F6A6)
+0310,CHRINVEC,Input vector (F49C)
+0312,CHROUTVEC,Output vector (F4EE)
+0314,STOPVEC,STOP-key test vector (F96B)
+0316,GETVEC,GET vector (F43D)
+0318,ABORTVEC,Abort-all-files vector (F67F)
+031A,LOADVEC,LOAD vector (F746)
+031C,SAVEVEC,SAVE vector (F84C)
+031E,MONVEC,Monitor command vector (EE77)
+0320,KBCONVEC,Keyboard control vector (E01F)
+0322,PRINTVEC,Print control vector (E01F)
+0324,ILSAVEC,IEEE send LSA vector (F274)
+0326,ITSAVEC,IEEE send TSA vector (F280)
+0328,IRCVVEC, IEEE receive byte vector (F30A)
+032A,ISENDVEC,IEEE send byte vector (F297)
+032C,IUNTKVEC,IEEE send UNTALK vector (F2AB)
+032E,IUNLIVEC,IEEE send UNLISTEN vector (F2AF)
+0330,ILISTVEC,IEEE send LISTEN vector (F234)
+0332,ISENDVEC,IEEE send TALK vector (F230)
+0334,FILELA,File logical address table
+033E,FILEDEV,File device table
+0348,FILESA,File secondary address table
+0352,SYSBOT,Bottom of SYSTEM memory (long address)
+0355,SYSTOP,Top of SYSTEM memory (long address)
+0358,MEMBOT,Bottom of USER memory (long address)
+035B,MEMTOP,Top of USER memory (long address)
+035E,IEEETO,IEEE timout
+035F,LOADVER,Load/Verify flag
+0360,NUMFILES,Number of open files
+0361,MSGMODE,Message mode byte
+036A,CASVECT,Cassette vector (dead end)
+036F,RELOCSA,Relocation start address
+0380,MEMTOP,Pointer: Top of Memory
+0382,BANKBYTE,BANK byte
+0383,RVSFLG,RVS flag
+0384,LINELEN,Current line length
+0385,TEMPOUT,Temp output character save
+0386,INSMODE,Insert Mode flag
+0387,SCROLL,Scroll flag
+0388,SCNTEMP,Screen temp
+0389,PRGKEY,Index to Programmable key
+038A,SCRMODE,Scroll-mode flag
+038B,BELLMD,Bell-mode flag
+038C,INBANKSAV,Indirect BANK save
+038D,KEYLEN,Lengths of KEY words
+03A1,TABSTOP,Bitmapped TAB STOPS
+03AB,KEYBUF,Keyboard input buffer
+03B5,KEYLEN,KEY word length
+03F8,RESVEC,Restart vector
+03FA,RMASK,Restart test mask
+0400,RAM0400,Free RAM start
+0800,RAM0800,Reserved for plug-in RAM
+1000,DOSROM,Reserved for DOS ROM
+2000,CART2000,Cartridge SLOT1
+4000,CART4000,Cartridge SLOT2
+6000,CART6000,Cartridge SLOT3
+8000,BASICROM,BASIC ROM start
+C000,CHROM,Reserved for Character ROM (P-series)
+D000,SCREEN,Screen RAM start
+D800,CRTCREG, CRTC Register Select 6545 (Video)
+D801,CRTCDAT, CRTC Data Register
+DA00,SID,   SID   6582 (Sound)
+DB00,CIA1,  CIA#1 6526 (Co-Processor)
+DC00,CIA2,  CIA#2 6526 (IEEE)
+DD00,UART,  UART  6551 (RS-232)
+DE00,TPI1,  TPI#1 6525 (IEEE)
+DF00,TPI2,  TPI#2 6525 (Keyboard)
+E000,KERNAL,KERNAL ROM start
+FBE9,IRQROUTINE,ROM IRQ Routine
+FCA5,IRQFINISH,ROM IRQ Finish up
+FFCF,CHRIN,KERNAL Character Input
+FFD2,CHROUT,KERNAL Print a Character
+FFE4,GETKEYBUF,KERNAL Get a key from buffer
+FFF6,KERNALFFF6,KERNAL-FFF6
+[TABLES]
+04F8,04FF,H,Zeros
+066D,067B,H,Filler
+067C,067F,H,ID N. Kuenne '84
+0680,06A2,S,Menu Banner
+06A4,06AA,S,text- Bank
+06AB,06AE,S,text - "="
+06B0,06B4,S,text "FREE"
+06B5,06D8,S,text-B-Series Monitor
+06DC,06E7,S,text- Bank
+06E8,06FC,S,text-Press SHIFT+CE
+06FD,0721,H,zeros
+[LABELS]
+01F8,STACK_1F8,Stack
+01F9,STACK_1F9,Stack
+01FA,STACK_1FA,Stack
+01FB,STACK_1FB,Stack
+01FC,STACK_1FC,Stack
+01FD,STACK_1FD,Stack
+01FE,STACK_1FE,Stack
+01FF,STACK_1FF,Stack
+0412,SUB_0412
+0436,Jump3
+0500,SUB_0500
+050C,LOOP_050C
+0510,SUB_0510
+0516,SUB_0516
+0530,MenuKey
+0540,SUB_0540
+058B,WaitKey
+0617,Jump2
+062B,Jump1
+067B,STOR067B,Storage067B
+0680,BANNER
+0700,STOR0700,Storage0700
+070F,STOR070F,Storage070F
+0710,STOR0710,Storage0710
+071F,STOR071F,Storage071F
+0720,STOR0720,Storage0720
+0728,STOR0728,Storage0728
+0729,STOR0729,Storage0729
+072B,STOR072B,Storage072B
+0730,STOR0730,Storage0730
+[COMMENTS]
+0400,[,/=;Commodore 8432 PET Emulator for B-Series;Original program by N. Keunne, 1984;;This is the Menu code for BANK 15;/=
